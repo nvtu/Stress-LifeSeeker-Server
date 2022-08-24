@@ -1,4 +1,5 @@
 # MONGODB SCHEMAS DEFINITION
+from msilib import schema
 from bson import ObjectId
 from pydantic import BaseModel, Field
 from typing import List
@@ -20,6 +21,21 @@ class PyObjectId(ObjectId):
     @classmethod
     def __modify_schema__(cls, field_schema):
         field_schema.update(type = 'string')
+
+
+class MomentListByDateId(BaseModel):
+    user_id: str = Field(...)
+    moment_date: date = Field(alias = 'date')
+
+
+    class Config:
+        allow_population_by_field_name = True
+        schema_extra = {
+            'example': {
+                "user_id": "nvtu",
+                "moment_date": "2020-01-01"
+            }
+        }
 
 
 class UserModel(BaseModel):
@@ -50,18 +66,20 @@ class MomentListByDate(BaseModel):
     The schema definition for the Moment List By Date Model of the system
     """
 
-    id: PyObjectId = Field(default_factory = PyObjectId, alias = '_id')
-    image_list: List[str] = Field(...)
+    id: MomentListByDateId = Field(alias = '_id')
+    moment_list: List[str] = Field(...)
 
     class Config:
         allow_population_by_field_name = True
-        json_encoders = {ObjectId: str}
         schema_extra = {
             'example': {
-                "date": "nvtu_2020-01-01",
-                "image_list": [
-                    "image1.jpg",
-                    "image2.jpg"
+                "id": {
+                    "user_id": "nvtu",
+                    "moment_date": "2020-01-01"
+                },
+                "moment_list": [
+                    "image1",
+                    "image2"
                 ]
             }
         }

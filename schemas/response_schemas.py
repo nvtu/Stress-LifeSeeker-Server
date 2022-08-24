@@ -16,3 +16,18 @@ class ResponseListDates(BaseModel):
                 ]
             }
         }
+
+
+class ResponseListMoments(BaseModel):
+    moment_list: List[str]
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "moment_list": [
+                    "20200101_105230",
+                    "20200101_105231",
+                    "20200101_105232",
+                ]
+            }
+        }
