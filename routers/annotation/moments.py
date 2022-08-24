@@ -54,17 +54,21 @@ async def append_moments(request: MomentListByDate):
     return _moments
     
 
-@router.post("/get_moments_by_date", status_code = status.HTTP_200_OK, response_model = ResponseListMoments)
-async def get_moments_by_date(request: MomentListByDateId):
+@router.get("/get_moments_by_date", status_code = status.HTTP_200_OK, response_model = ResponseListMoments)
+async def get_moments_by_date(user_id: str, moment_date: str):
     """
     Get all the moments of a user in a date
     """
 
-    moment_id = jsonable_encoder(request)
+    moment_id = MomentListByDateId(user_id = user_id, moment_date = moment_date)
+    moment_id = jsonable_encoder(moment_id)
     try:
+        print(moment_id)
         _moments = await db['moments'].find_one({"_id": moment_id})
+        if _moments is None:
+            raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = "No moments found")
+        return _moments
     except Exception as e:
         sentry_sdk.capture_exception(e)
-    if _moments is None:
-        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = "No moments found")
-    return _moments
+
+

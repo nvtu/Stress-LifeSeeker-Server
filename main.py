@@ -29,11 +29,3 @@ routers = [
 for router in routers:
     app.include_router(router)
 
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World!!!!"}
-
-@app.get("/sentry-debug")
-async def trigger_error():
-    division_by_zero = 1 / 0
