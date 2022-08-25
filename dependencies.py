@@ -1,11 +1,11 @@
 from fastapi import HTTPException, status, Header
-from routers.authentication.__init__ import SECRET_KEY
+from routers.authentication.__init__ import SECRET_KEY, HASH_ALGORITHM
 from internal.security.token_decoder import TokenDecoder
 from internal.security.authenticator import Authenticator
 from jose import JWTError
 
 
-token_decoder = TokenDecoder(SECRET_KEY)
+token_decoder = TokenDecoder(SECRET_KEY, HASH_ALGORITHM)
 authenticator = Authenticator()
 credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,

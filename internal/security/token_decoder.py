@@ -5,7 +5,7 @@ from schemas.security_schemas import Payload
 
 class TokenDecoder:
 
-    def __init__(self, secret_key: str, algorithm: str = 'HS256'):
+    def __init__(self, secret_key: str, algorithm: str):
         self.secret_key = secret_key
         self.algorithm = algorithm
 

@@ -5,7 +5,6 @@ from schemas.db_schemas import (
     MomentListByDateId, 
     MomentDetail,
     MomentDetailId,
-    MomentMetadata,
 )
 from schemas.request_schemas import (
     RequestUpdateMomentDetail,

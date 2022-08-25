@@ -15,7 +15,6 @@ db = connectors.mongodb_client['stress_lifelog']
 router = APIRouter(
     prefix="/users",
     tags=["users"],
-    dependencies = [Depends(verify_token)],
     responses = { 404: {"description": "Not Found"}},
 )
 
@@ -45,7 +44,7 @@ async def insert_user(request: RequestModifyListDates, user_id: str = Depends(ve
 
 
 @router.post("/insert_dates_to_user", status_code = status.HTTP_201_CREATED, response_model = UserModel)
-async def insert_date_to_user(request : UserModel, user_id: str = Depends(verify_token)):
+async def insert_date_to_user(request : RequestModifyListDates, user_id: str = Depends(verify_token)):
 
     """
     Append a list of dates to the pre-existsing user's list of dates.

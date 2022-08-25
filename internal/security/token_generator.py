@@ -6,7 +6,7 @@ from jose import jwt
 
 class TokenGenerator:
 
-    def __init__(self, secret_key: str, algorithm: str = 'HS256'):
+    def __init__(self, secret_key: str, algorithm: str):
         self.algorithm = algorithm
         self.secret_key = secret_key
 

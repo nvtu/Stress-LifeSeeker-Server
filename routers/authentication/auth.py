@@ -1,4 +1,4 @@
-from .__init__ import SECRET_KEY
+from .__init__ import SECRET_KEY, HASH_ALGORITHM
 from fastapi import APIRouter, Depends, status, HTTPException
 from passlib.context import CryptContext
 from schemas.security_schemas import Token
@@ -22,7 +22,7 @@ router = APIRouter(
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 authenticator = Authenticator()
-token_generator = TokenGenerator(SECRET_KEY)
+token_generator = TokenGenerator(SECRET_KEY, HASH_ALGORITHM)
 
 
 @router.post('/', response_model = Token)
