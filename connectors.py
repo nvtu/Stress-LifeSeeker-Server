@@ -4,6 +4,8 @@ from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 import sentry_sdk
 
+
+# Connect to MongoDB
 mongodb_client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL)
 
 

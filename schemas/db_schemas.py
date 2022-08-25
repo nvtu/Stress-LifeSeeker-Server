@@ -23,19 +23,6 @@ class PyObjectId(ObjectId):
         field_schema.update(type = 'string')
 
 
-class MomentListByDateId(BaseModel):
-    user_id: str = Field(...)
-    moment_date: date = Field(alias = 'date')
-
-
-    class Config:
-        allow_population_by_field_name = True
-        schema_extra = {
-            'example': {
-                "user_id": "nvtu",
-                "moment_date": "2020-01-01"
-            }
-        }
 
 
 class UserModel(BaseModel):
@@ -57,6 +44,21 @@ class UserModel(BaseModel):
                     "2020-01-01",
                     "2020-01-02"
                 ]
+            }
+        }
+
+
+class MomentListByDateId(BaseModel):
+    user_id: str = Field(...)
+    moment_date: date = Field(...)
+
+
+    class Config:
+        allow_population_by_field_name = True
+        schema_extra = {
+            'example': {
+                "user_id": "nvtu",
+                "moment_date": "2020-01-01"
             }
         }
 
@@ -102,23 +104,30 @@ class PhysiologicalData(BaseModel):
         }
 
 
-class MomentDetail(BaseModel):
-    """
-    The schema definition for the Image Detail Model of the system
-    """
-
-    # id: PyObjectId = Field(default_factory = PyObjectId, alias = '_id')
-    # Metadata Information
+class MomentDetailId(BaseModel):
     user_id: str = Field(...)
-    date_moment: date = Field(...)
+    moment_date: date = Field(alias = 'date')
     local_time: time = Field(...)
+
+    class Config:
+        allow_population_by_field_name = True
+        schema_extra = {
+            'example': {
+                "user_id": "nvtu",
+                "moment_date": "2020-01-01",
+                "local_time": "10:52:30"
+            }
+        }
+
+
+class MomentMetadata(BaseModel):
     utc_time: time = Field(...)
     image_path: str = Field(...)
     other_image_path: str = Field(...)
     
     # Location, activity, and stress
     location: str = Field(...)
-    stress: str = Field(...)
+    stress_level: str = Field(...)
     activity: str = Field(...)
 
     # Physiological data
@@ -129,18 +138,65 @@ class MomentDetail(BaseModel):
 
     class Config:
         allow_population_by_field_name = True
-        json_encoders = {ObjectId: str}
         schema_extra = {
             'example': {
-                "id": "nvtu_2020-01-01_00:00:00",
-                "user_id": "nvtu",
-                "date_moment": "2020-01-01",
-                "local_time": "00:00:00",
                 "utc_time": "00:00:00",
                 "image_path": "image1.jpg",
                 "other_image_path": "image2.jpg",
                 "location": "home",
-                "stress": "low",
+                "stress_level": "low",
+                "activity": "sedentary",
+                "heart_rate": {
+                    "min_value": 0.0,
+                    "max_value": 0.0,
+                    "mean_value": 0.0,
+                    "std_value": 0.0
+                },
+                "bvp": {
+                    "min_value": 0.0,
+                    "max_value": 0.0,
+                    "mean_value": 0.0,
+                    "std_value": 0.0
+                },
+                "eda": {
+                    "min_value": 0.0,
+                    "max_value": 0.0,
+                    "mean_value": 0.0,
+                    "std_value": 0.0
+                },
+                "temp": {
+                    "min_value": 0.0,
+                    "max_value": 0.0,
+                    "mean_value": 0.0,
+                    "std_value": 0.0
+                }
+            }
+        }
+
+
+
+class MomentDetail(MomentMetadata):
+    """
+    The schema definition for the Image Detail Model of the system
+    """
+
+    # Metadata Information
+    id: MomentDetailId = Field(alias = '_id')
+
+    class Config:
+        allow_population_by_field_name = True
+        schema_extra = {
+            'example': {
+                "id": {
+                    "user_id": "nvtu",
+                    "moment_date": "2020-01-01",
+                    "local_time": "10:52:30"
+                },
+                "utc_time": "00:00:00",
+                "image_path": "image1.jpg",
+                "other_image_path": "image2.jpg",
+                "location": "home",
+                "stress_level": "low",
                 "activity": "sedentary",
                 "heart_rate": {
                     "min_value": 0.0,
