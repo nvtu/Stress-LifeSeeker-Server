@@ -13,15 +13,30 @@ credentials_exception = HTTPException(
     headers={"WWW-Authenticate": "Bearer"},
 )
 
+expired_creditentials_exception = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Access token has expired",
+    headers={"WWW-Authenticate": "Bearer"},
+)
+
 
 async def verify_token(token: str = Header(...)):
     try:
         payload = token_decoder.decode(token)
-        username = payload.get("sub") # Check if the username is in the payload
+        username = payload.get("username") # Check if the username is in the payload
         if username is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    if not authenticator.verify_user(payload["sub"]): # Check if the user is actually in the database
+    if not authenticator.verify_user(username): # Check if the user is actually in the database
         raise credentials_exception
+    if not authenticator.verify_user_time_info(username, payload.get("iat")):
+        raise credentials_exception
+    if not authenticator.verify_expiration_time(payload.get("exp")):
+        raise expired_creditentials_exception
     return username
+
+
+
+
+

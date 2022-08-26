@@ -13,8 +13,8 @@ db = connectors.mongodb_client['stress_lifelog']
 
 
 router = APIRouter(
-    prefix="/users",
-    tags=["users"],
+    prefix="/annotation/users",
+    tags=["/annotation/users"],
     responses = { 404: {"description": "Not Found"}},
 )
 

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers.annotation import (
     users as annotation_users,
@@ -7,8 +7,13 @@ from routers.annotation import (
 from routers.authentication import (
     auth as authentication_auth,
 )
+from routers.users import users
 from dependencies import *
+from connectors import sqlalchemy_engine
+import sql_app.schemas
 
+
+sql_app.schemas.Base.metadata.create_all(bind = sqlalchemy_engine)
 
 app = FastAPI(
     name = "LifeSeeker -- Stress Version", 
@@ -30,7 +35,7 @@ routers = [
     annotation_users.router,
     annotation_moments.router,
     authentication_auth.router,
-
+    users.router,
 ]
 for router in routers:
     app.include_router(router)

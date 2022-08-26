@@ -1,4 +1,5 @@
 from multiprocessing import allow_connection_pickling
+from tkinter import filedialog
 from pydantic import BaseModel, Field
 from datetime import date, time
 from typing import Union, List
@@ -133,5 +134,20 @@ class RequestUpdateMomentDetail(BaseModel):
                 #     "mean_value": 0.0,
                 #     "std_value": 0.0
                 # }
+            }
+        }
+
+
+class RequestUserCreate(BaseModel):
+    username: str = Field(...)
+    name: str = Field(...)
+    password: str = Field(...)
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "username": "nvtu",
+                "name": "Ninh Van Tu",
+                "password": "123456"
             }
         }

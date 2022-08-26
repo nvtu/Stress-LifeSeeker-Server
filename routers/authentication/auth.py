@@ -36,7 +36,7 @@ async def authenticate_user_for_access_token(form_data: OAuth2PasswordRequestFor
         )
     access_token_expires = timedelta(minutes = ACCESS_TOKEN_EXPIRE_MINUTES)
     tokens = token_generator.create_authentication_token(
-        data={"sub": form_data.username}, 
+        data={"username": form_data.username}, 
         expires_delta=access_token_expires
     )
     return tokens

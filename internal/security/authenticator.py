@@ -1,16 +1,11 @@
 from passlib.context import CryptContext
 from schemas.security_schemas import UserInDB
+from sql_app.dependencies import sqlalchemy_session
+from sqlalchemy.orm import Session
+from sql_app import crud
+from datetime import datetime
+import sentry_sdk
 
-
-db = {
-    "nvtu": {
-        "username": "nvtu",
-        "full_name": "John Doe",
-        "email": "johndoe@example.com",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
-        "disabled": False,
-    }
-}
 
 class Authenticator:
 
@@ -25,17 +20,49 @@ class Authenticator:
         return True
 
 
-    def verify_user(self, username: str) -> bool:
+    def verify_user(self, username: str, db: Session = sqlalchemy_session()) -> bool:
         """
         Check if the user is actually in the database
         """
-        return username in db
+        try:
+            user = crud.get_user(db, username=username) 
+            db.close()
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            db.close()
+            return False
+        return user is not None
+
+    
+    def verify_user_time_info(self, username: str, iat: int, db: Session = sqlalchemy_session()) -> bool:
+        """
+        Check if the issue time of the token is valid
+        """
+        try:
+            user = crud.get_user_expiration_time(db, username = username)
+            db.close()
+            return user.iat == iat
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            db.close()
+            return False
 
 
-    def __get_user(self, username: str):
-        if username in db:
-            user_dict = db[username]
-            return UserInDB(**user_dict)
+    def verify_expiration_time(self, exp: int):
+        """"
+        Check if the expiration time of the token is valid
+        """
+        return exp > datetime.utcnow().timestamp()
+
+
+    def __get_user(self, username: str, db: Session = sqlalchemy_session()):
+        try:
+            user = crud.get_user_in_db(db, username=username)
+            db.close()
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            db.close()
+        return user
 
 
     def __verify_password(self, plain_password: str, hashed_password: str) -> bool:

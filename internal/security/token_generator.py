@@ -1,6 +1,9 @@
 from typing import Union
 from datetime import timedelta, datetime
 from schemas.security_schemas import Token
+from sql_app.dependencies import sqlalchemy_session
+from sqlalchemy.orm import Session
+from sql_app import crud
 from jose import jwt
 
 
@@ -18,21 +21,36 @@ class TokenGenerator:
 
     def create_authentication_token(self, data: dict, expires_delta: Union[timedelta, None] = None) -> Token:
         to_encode = data.copy()
+        iat = datetime.utcnow()
         if expires_delta:
-            expire = datetime.utcnow() + expires_delta
+            expire = iat + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(minutes = 15)
+            expire = iat + timedelta(minutes = 15)
+
         to_encode.update({
-            "exp": expire, 
-            "iat": datetime.utcnow(), 
+            "exp": int(expire.timestamp()), 
+            "iat": int(iat.timestamp()),
         })
 
+        self.__insert_token_payload_to_db(to_encode)
+        
         tokens = Token(
             access_token = self.__create_access_token(to_encode),
             refresh_token = self.__create_refresh_token(to_encode),
         )
 
         return tokens
+
+    
+    def __insert_token_payload_to_db(self, data: dict, db: Session = sqlalchemy_session()):
+        try:
+            if not crud.get_user_expiration_time(db, data["username"]):
+                crud.create_user_in_expiration_time(db, **data)
+            else:
+                crud.update_user_expiration_time_info(db, **data)
+            db.close()
+        except Exception as e:
+            db.close()
 
 
     def __create_access_token(self, data: dict):
