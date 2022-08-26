@@ -9,8 +9,8 @@ import sentry_sdk
 
 class Authenticator:
 
-    def __init__(self):
-        self.pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+    def __init__(self, algorithm: str):
+        self.pwd_context = CryptContext(schemes=[algorithm], deprecated='auto')
 
 
     def authenticate(self, username: str, password: str) -> bool:
