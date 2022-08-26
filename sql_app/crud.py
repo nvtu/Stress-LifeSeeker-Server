@@ -55,7 +55,6 @@ def create_user_in_expiration_time(db: Session, username: str , exp: int, iat: i
 
 def update_user_expiration_time_info(db: Session, username: str, exp: int, iat: int):
     db_user = db.query(ORMExpirationTime).get(username)
-    print(db_user)
     db_user.exp = exp
     db_user.iat = iat
     db.commit()

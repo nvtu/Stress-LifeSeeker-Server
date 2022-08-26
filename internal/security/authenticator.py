@@ -15,6 +15,7 @@ class Authenticator:
 
     def authenticate(self, username: str, password: str) -> bool:
         user = self.__get_user(username)
+        print(user)
         if not user or not self.__verify_password(password, user.hashed_password):
             return False
         return True
