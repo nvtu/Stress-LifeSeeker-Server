@@ -1,6 +1,5 @@
 from constants.security_settings import SECRET_KEY, TOKEN_HASH_ALGORITHM, PASSWORD_HASH_ALGORITHM
 from fastapi import APIRouter, Depends, status, HTTPException
-from passlib.context import CryptContext
 from schemas.security_schemas import Token
 from internal.security.authenticator import Authenticator
 from internal.security.token_generator import TokenGenerator
@@ -24,7 +23,7 @@ authenticator = Authenticator(PASSWORD_HASH_ALGORITHM)
 token_generator = TokenGenerator(SECRET_KEY, TOKEN_HASH_ALGORITHM)
 
 
-@router.post('/', response_model = Token)
+@router.post('', response_model = Token)
 async def authenticate_user_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticator.authenticate(form_data.username, form_data.password)
     if not user:
