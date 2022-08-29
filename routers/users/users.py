@@ -10,7 +10,7 @@ from schemas.security_schemas import (
 from typing import List
 from schemas.request_schemas import RequestUserCreate
 from dependencies import verify_token
-from internal.transfer.upload import handle_upload_file, save_file_internally
+from internal.transfer.upload import handle_upload_file
 
 
 router = APIRouter(
@@ -44,7 +44,7 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_sqldb_
 @router.post("/upload_file", status_code = status.HTTP_202_ACCEPTED)
 async def upload_file(file: UploadFile, user_id: str = Depends(verify_token)):
     try:
-        handle_upload_file(file, save_file_internally)
+        await handle_upload_file(file, user_id)
     except Exception as e:
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Upload error ---!!!!")
     return {"message": "File uploaded successfully"}

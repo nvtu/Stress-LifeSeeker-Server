@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from internal.security.hash_generator import HashGenerator
 from schemas.request_schemas import RequestUserCreate
+from constants.security_settings import PASSWORD_HASH_ALGORITHM
+
 
 from .schemas import (
     User as ORMUser,
@@ -26,7 +28,7 @@ def get_user_expiration_time(db: Session, username: str):
 
 
 def create_user(db: Session, user: RequestUserCreate):
-    hash_machine = HashGenerator()
+    hash_machine = HashGenerator(PASSWORD_HASH_ALGORITHM)
     hashed_password = hash_machine.hash_string(user.password)
 
     # Add user's secret data to database

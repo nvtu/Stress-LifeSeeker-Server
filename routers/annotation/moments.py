@@ -2,19 +2,28 @@ from fastapi import APIRouter, status, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
 from schemas.db_schemas import (
     MomentListByDate, 
-    MomentListByDateId, 
     MomentDetail,
     MomentDetailId,
+    MomentMetadata
 )
 from schemas.request_schemas import (
     RequestUpdateMomentDetail,
     RequestInsertMomentListByDate,
     RequestInsertMomentDetail,
 )
-import sentry_sdk
 import connectors
 from schemas.response_schemas import ResponseListMoments
 from dependencies import verify_token
+from internal.db.moment_annotation_crud import (
+    insert_moments as insert_new_moments,
+    append_moments as append_new_moments,
+    get_moments_by_date as get_moments,
+)
+from internal.db.moment_detail_annotation_crud import (
+    insert_moment_detail as insert_new_moment_detail,
+    update_moment_detail as update_new_moment_detail,
+    get_moment_detail as _get_moment_detail,
+)
 
 
 db = connectors.mongodb_client['stress_lifelog']
@@ -36,16 +45,11 @@ async def insert_moments(request: RequestInsertMomentListByDate, user_id: str = 
     request = jsonable_encoder(request)
     request['id']['user_id'] = user_id
 
-    moment_list_by_date = MomentListByDate(**request)
-    moment_list_by_date = jsonable_encoder(moment_list_by_date)
-
-    try:
-        new_moment_list_by_date = await db['moments'].insert_one(moment_list_by_date)
-        created_moment_list_by_date = await db['moments'].find_one({"_id": new_moment_list_by_date.inserted_id})
-    except Exception as e:
-        sentry_sdk.capture_exception(e)
+    result = await insert_new_moments(**request) 
+    if result == False:
         raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail = "Moments already exists")
-    return created_moment_list_by_date
+    new_moment = await get_moments(**request['id'])
+    return new_moment
 
 
 @router.post("/append_moments", status_code = status.HTTP_201_CREATED, response_model = MomentListByDate)
@@ -59,18 +63,14 @@ async def append_moments(request: RequestInsertMomentListByDate, user_id: str = 
     request = jsonable_encoder(request)
     request['id']['user_id'] = user_id
 
-    moment_id = MomentListByDateId(**request['id'])
-    moment_id = jsonable_encoder(moment_id)
-    _moments = request['moment_list']
 
-    try:
-        _ = await db['moments'].update_many({"_id": moment_id}, {"$addToSet": {"moment_list": {"$each": _moments }}}, upsert = True)
-        _moments = await db['moments'].find_one({"_id": moment_id})
-    except Exception as e:
-        sentry_sdk.capture_exception(e)
+    result = await append_new_moments(**request)
+    if result == False:
         raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail = "Duplicate moments!!!")
-    return _moments
-    
+
+    new_moment = await get_moments(**request['id'])
+    return new_moment
+
 
 @router.get("/get_moments_by_date", status_code = status.HTTP_200_OK, response_model = ResponseListMoments)
 async def get_moments_by_date(moment_date: str, user_id: str = Depends(verify_token)):
@@ -79,15 +79,10 @@ async def get_moments_by_date(moment_date: str, user_id: str = Depends(verify_to
     Get all the moments of a user in a date
     """
 
-    moment_id = MomentListByDateId(user_id = user_id, moment_date = moment_date)
-    moment_id = jsonable_encoder(moment_id)
-    try:
-        _moments = await db['moments'].find_one({"_id": moment_id})
-        if _moments is None:
-            raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = "No moments found")
-        return _moments
-    except Exception as e:
-        sentry_sdk.capture_exception(e)
+    _moments = await get_moments(user_id, moment_date)
+    if _moments is None:
+        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = "No moments found")
+    return _moments
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -104,16 +99,19 @@ async def insert_moment_detail(request: RequestInsertMomentDetail, user_id : str
     request = jsonable_encoder(request)
     request['id']['user_id'] = user_id
 
-    moment_detail = MomentDetail(**request)
-    moment_detail = jsonable_encoder(moment_detail)
+    id = request['id']
+    moment_id = MomentDetailId(**id)
+    del request['id']
+    moment_detail = MomentMetadata(**request)
 
-    try:
-        new_moment_detail = await db['moment_detail'].insert_one(moment_detail)
-        created_moment_detail = await db['moment_detail'].find_one({"_id": new_moment_detail.inserted_id})
-    except Exception as e:
-        sentry_sdk.capture_exception(e)
+    result = await insert_new_moment_detail(moment_id, moment_detail)
+    if result == False:
         raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail = "Duplicate moments!!!")
-    return created_moment_detail
+
+    id['moment_time'] = id['local_time']
+    del id['local_time']
+    new_moment_detail = await _get_moment_detail(**id)
+    return new_moment_detail
 
 
 @router.post("/update_moment_detail", status_code = status.HTTP_201_CREATED, response_model = MomentDetail)
@@ -124,22 +122,17 @@ async def update_moment_detail(request: RequestUpdateMomentDetail, user_id : str
     NOTE: Refer to the MomentDetail in the folder schemas for the required fields.
     """
 
-    request = jsonable_encoder(request)
-    request['id']['user_id'] = user_id
-
-    data_type = request['data_type']
-    value = request['value']
-
-    moment_id = MomentDetailId(**request['id'])
-    moment_id = jsonable_encoder(moment_id)
-
-    try:
-        _ = await db['moment_detail'].update_one({"_id": moment_id}, {"$set": {data_type: value}})
-        _moment_detail = await db['moment_detail'].find_one({"_id": moment_id})
-    except Exception as e:
-        sentry_sdk.capture_exception(e)
+    result = await update_new_moment_detail(user_id, request)
+    if result == False:
         raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail = "Update moment details failed!!!")
-    return _moment_detail
+
+    id = jsonable_encoder(request.id)
+    id['user_id'] = user_id
+    id['moment_time'] = id['local_time']
+    del id['local_time']
+    
+    moment_detail = await _get_moment_detail(**id)
+    return moment_detail
 
 
 @router.get("/get_moment_detail", status_code = status.HTTP_200_OK, response_model = MomentDetail)
@@ -150,14 +143,7 @@ async def get_moment_detail(moment_date: str, moment_time: str, user_id: str = D
     NOTE: Refer to the MomentDetail in the folder schemas for the required fields.
     """
 
-    moment_id = MomentDetailId(user_id = user_id, moment_date = moment_date, local_time = moment_time)
-    moment_id = jsonable_encoder(moment_id)
-
-    try:
-        _moment_detail = await db['moment_detail'].find_one({"_id": moment_id})
-        if _moment_detail is None:
-            raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = "No moment detail found")
-        return _moment_detail
-    except Exception as e:
-        sentry_sdk.capture_exception(e)
-        raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "Internal Server Error")
+    moment_detail = await _get_moment_detail(user_id, moment_date, moment_time)
+    if moment_detail is None:
+        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = "No moment detail found")
+    return moment_detail

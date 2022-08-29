@@ -88,10 +88,10 @@ class MomentListByDate(BaseModel):
 
 
 class PhysiologicalData(BaseModel):
-    min_value: float = Field(...)
-    max_value: float = Field(...)
-    mean_value: float = Field(...)
-    std_value: float = Field(...)
+    min_value: float = Field(default = 0)
+    max_value: float = Field(default = 0)
+    mean_value: float = Field(default = 0)
+    std_value: float = Field(default = 0)
 
     class Config:
         schema_extra = {
@@ -126,9 +126,9 @@ class MomentMetadata(BaseModel):
     other_image_path: str = Field(...)
     
     # Location, activity, and stress
-    location: str = Field(...)
-    stress_level: str = Field(...)
-    activity: str = Field(...)
+    location: str = Field(default='')
+    stress_level: str = Field(default='')
+    activity: str = Field(default='')
 
     # Physiological data
     heart_rate: PhysiologicalData = Field(...)

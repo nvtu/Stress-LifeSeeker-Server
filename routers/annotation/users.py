@@ -7,6 +7,11 @@ from schemas.request_schemas import RequestModifyListDates
 import sentry_sdk
 import connectors
 from dependencies import verify_token
+from internal.db.user_annotation_crud import (
+    get_dates_from_user as get_dates,
+    insert_dates_to_user as insert_dates,
+    insert_user as insert_user_with_dates,
+)
 
 
 db = connectors.mongodb_client['stress_lifelog']
@@ -30,21 +35,16 @@ async def insert_user(request: RequestModifyListDates, user_id: str = Depends(ve
     request = jsonable_encoder(request)
     request['user_id'] = user_id
 
-    user = UserModel(**request)
-    user = jsonable_encoder(user)
-
-    try:
-        new_user = await db['users'].insert_one(user)
-        created_user = await db['users'].find_one({"_id": new_user.inserted_id})
-    except Exception as e: 
-        sentry_sdk.capture_exception(e)
+    result = await insert_user_with_dates(**request)
+    if result == False:
         raise HTTPException(status_code = status.HTTP_409_CONFLICT, 
-                detail = "User already exists")
+            detail = "User already exists")
+    created_user = await get_dates(user_id)
     return created_user
 
 
 @router.post("/insert_dates_to_user", status_code = status.HTTP_201_CREATED, response_model = UserModel)
-async def insert_date_to_user(request : RequestModifyListDates, user_id: str = Depends(verify_token)):
+async def insert_dates_to_user(request : RequestModifyListDates, user_id: str = Depends(verify_token)):
 
     """
     Append a list of dates to the pre-existsing user's list of dates.
@@ -52,16 +52,14 @@ async def insert_date_to_user(request : RequestModifyListDates, user_id: str = D
     """
 
     request = jsonable_encoder(request)
-    dates = request['dates']
+    request['user_id'] = user_id
     
-    try:
-        # Insert a list of dates to the end of the list of dates for the user
-        _ = await db['users'].update_many({"_id": user_id, }, {"$addToSet": {"dates": {"$each": dates }}}, upsert = True) 
-        user = await db['users'].find_one({"_id": user_id})
-    except Exception as e:
-        sentry_sdk.capture_exception(e)
+    
+    result = await insert_dates(**request)
+    if result == False:
         raise HTTPException(status_code = status.HTTP_409_CONFLICT, 
             detail = "Duplicate dates!!!")
+    user = await get_dates(user_id)
     return user
 
 
@@ -74,12 +72,11 @@ async def get_dates_from_user(user_id: str = Depends(verify_token)):
     """
 
     try:
-        dates = await db['users'].find_one({"_id": user_id})
+        dates = await get_dates(user_id)
         if dates is None:
             raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, 
                 detail = "User not found")
     except Exception as e:
-        sentry_sdk.capture_exception(e)
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR, detail= "Internal Server Error")
     return dates
 
