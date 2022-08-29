@@ -52,14 +52,14 @@ async def append_moments(id: MomentListByDateId, moment_list: List[str]) -> bool
     return True
 
 
-async def get_moments_by_date(id: MomentListByDateId) -> MomentListByDate:
+async def get_moments_by_date(user_id: str, moment_date: str) -> MomentListByDate:
     
     """
     Get all the moments of a user in a date
     """
 
-    # moment_id = MomentListByDateId(user_id = user_id, moment_date = moment_date)
-    moment_id = jsonable_encoder(id)
+    moment_id = MomentListByDateId(user_id = user_id, moment_date = moment_date)
+    moment_id = jsonable_encoder(moment_id)
     try:
         _moments = await db['moments'].find_one({"_id": moment_id})
     except Exception as e:

@@ -31,6 +31,7 @@ async def verify_token(token: str = Header(...)):
     if not authenticator.verify_user(username): # Check if the user is actually in the database
         raise credentials_exception
     if not authenticator.verify_user_time_info(username, payload.get("iat")):
+        print("AAA")
         raise credentials_exception
     if not authenticator.verify_expiration_time(payload.get("exp")):
         raise expired_creditentials_exception
