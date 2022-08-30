@@ -32,6 +32,21 @@ async def get_all_annotation_data(user_id: str) -> Union[None, UserAnnotationLis
     return annotation_data
 
 
+async def get_annotation_list(user_id: str, list_type: str):
+    """
+    Get a list of an annotation in the database.
+    """
+    
+    annotation_list = None
+    if list_type == 'location':
+        annotation_list = await get_location_list(user_id)
+    elif list_type == 'stress_level':
+        annotation_list = await get_stress_level_list(user_id)
+    elif list_type == 'activity':
+        annotation_list = await get_activity_list(user_id)
+    return annotation_list
+
+
 async def insert_to_location_list(user_id: str, value: str):
     """
     Insert a new location into the database.

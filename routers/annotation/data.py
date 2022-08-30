@@ -13,6 +13,7 @@ from internal.db.annotation_list_crud import (
     insert_to_activity_list,
     insert_default_annotation_data as insert_default_annotation_data_to_db,
     get_all_annotation_data,
+    get_annotation_list as _get_annotation_list,
 )
 
 
@@ -73,6 +74,9 @@ async def insert_to_annotation_list(request: RequestInsertAnnotationValue, user_
     if result == False:
         raise HTTPException(status_code = status.HTTP_409_CONFLICT, 
             detail = "Duplicate value!!!")
+    
+    annotation_list = await _get_annotation_list(user_id, list_type)
+    return annotation_list
 
 
 @router.get("/get_annotation_list", status_code = status.HTTP_200_OK, response_model = ResponseListStringValue)
@@ -80,18 +84,9 @@ async def get_annotation_list(list_type: str, user_id: str = Depends(verify_toke
     """
     Get a list of all the locations in the database.
     """
-    annotation_list = None
-    if list_type == 'location':
-        annotation_list = await get_location_list(user_id)
-    elif list_type == 'stress_level':
-        annotation_list = await get_stress_level_list(user_id)
-    elif list_type == 'activity':
-        annotation_list = await get_activity_list(user_id)
-    else:
-        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, 
-            detail = "Invalid list type")
+    annotation_list = await _get_annotation_list(user_id, list_type)
     if annotation_list is None:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, 
-            detail = "List not found")
+            detail = "User not found")
     return annotation_list
 
