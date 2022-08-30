@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers.annotation import (
     users as annotation_users,
     moments as annotation_moments,
+    data as annotation_data
 )
 from routers.authentication import (
     auth as authentication_auth,
@@ -34,6 +35,7 @@ app.add_middleware(
 routers = [
     annotation_users.router,
     annotation_moments.router,
+    annotation_data.router,
     authentication_auth.router,
     users.router,
 ]

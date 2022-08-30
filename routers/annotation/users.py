@@ -4,7 +4,6 @@ from fastapi.encoders import jsonable_encoder
 from schemas.db_schemas import UserModel
 from schemas.response_schemas import ResponseListDates
 from schemas.request_schemas import RequestModifyListDates
-import sentry_sdk
 import connectors
 from dependencies import verify_token
 from internal.db.user_annotation_crud import (

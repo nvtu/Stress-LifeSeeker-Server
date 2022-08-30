@@ -151,3 +151,43 @@ class RequestUserCreate(BaseModel):
                 "password": "123456"
             }
         }
+
+
+class RequestGetAnnotationList(BaseModel):
+    list_type: str = Field(...)
+
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "list_type": "location"
+            }
+        }
+
+
+class RequestInsertAnnotationValue(RequestGetAnnotationList):
+    value: str = Field(...)
+
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "list_type": "location",
+                "value": "Home"
+            }
+        }
+
+
+class RequestInsertDefaultAnnotationData(BaseModel):
+    location_list: List[str] = Field(...)
+    stress_level_list: List[str] = Field(...)
+    activity_list: List[str] = Field(...)
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "location_list": ["Home", "Dublin City University"], 
+                "stress_level_list": ["Relax", "Low", "Medium", "High"],
+                "activity_list": ['Sitting', 'Walking', 'Running', 'Standing', 'Cycling', 'Driving', 'Riding', 'Hiking', 'Swimming', 'Biking']
+            }
+        }

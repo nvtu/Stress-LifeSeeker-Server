@@ -31,3 +31,19 @@ class ResponseListMoments(BaseModel):
                 ]
             }
         }
+
+
+class ResponseListStringValue(BaseModel):
+    list_type: str
+    data_list: List[str]
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "list_type": "location",
+                "data_list": [
+                    'Dublin City University',
+                    'Home'
+                ]
+            }
+        }
